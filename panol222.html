@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pañol TIOMA</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#1B1E24;
+    --panel:#242830;
+    --panel-alt:#2C313B;
+    --text:#ECE8E1;
+    --text-dim:#9BA0AC;
+    --accent:#C68B46;
+    --accent-dim:#8C633A;
+    --ok:#7A9471;
+    --danger:#B5533C;
+    --border:#383D48;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:28px 20px 60px;}
+
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--border);
+    padding-bottom:18px;margin-bottom:22px;
+  }
+  header h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;font-size:28px;margin:0;letter-spacing:-0.01em;
+  }
+  header h1 span{color:var(--accent);}
+  header .stats{display:flex;gap:22px;font-family:'Space Grotesk',sans-serif;}
+  header .stats div{text-align:right;}
+  header .stats b{display:block;font-size:20px;}
+  header .stats small{color:var(--text-dim);font-size:12px;}
+
+  .tabs{display:flex;gap:4px;margin-bottom:20px;}
+  .tabs button{
+    background:none;border:none;color:var(--text-dim);
+    font-family:'Inter';font-size:14px;font-weight:600;
+    padding:8px 4px;margin-right:18px;cursor:pointer;
+    border-bottom:2px solid transparent;
+  }
+  .tabs button.active{color:var(--text);border-bottom-color:var(--accent);}
+
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  input,select{
+    background:var(--panel);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:9px 11px;font-family:'Inter';font-size:14px;
+  }
+  input:focus,select:focus{outline:1px solid var(--accent);}
+  button.btn{
+    background:var(--accent);color:#1B1E24;border:none;border-radius:6px;
+    padding:9px 16px;font-family:'Inter';font-weight:600;font-size:14px;cursor:pointer;
+  }
+  button.btn:hover{background:#D69950;}
+  button.btn.secondary{background:var(--panel-alt);color:var(--text);border:1px solid var(--border);}
+  button.btn.secondary:hover{border-color:var(--accent);}
+  button.btn.danger{background:transparent;color:var(--danger);border:1px solid var(--danger);}
+
+  .category-group{margin-bottom:26px;}
+  .category-group h2{
+    font-family:'Space Grotesk';font-size:15px;color:var(--text-dim);
+    font-weight:600;margin:0 0 10px;
+  }
+  .item-card{
+    background:var(--panel);border:1px solid var(--border);border-radius:8px;
+    padding:14px 16px;margin-bottom:8px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+  }
+  .item-card .name{font-weight:600;font-size:15px;}
+  .item-card .meta{color:var(--text-dim);font-size:12px;margin-top:2px;}
+  .qty{
+    font-family:'Space Grotesk';font-size:18px;font-weight:600;text-align:right;min-width:80px;
+  }
+  .qty small{display:block;color:var(--text-dim);font-size:11px;font-weight:400;font-family:'Inter';}
+  .qty.low{color:var(--danger);}
+  .item-actions{display:flex;gap:6px;}
+  .item-actions button{
+    background:var(--panel-alt);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;
+  }
+  .item-actions button:hover{border-color:var(--accent);}
+
+  .empty{color:var(--text-dim);padding:30px 0;text-align:center;font-size:14px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{
+    text-align:left;color:var(--text-dim);font-weight:600;font-size:12px;
+    padding:8px 10px;border-bottom:1px solid var(--border);
+  }
+  td{padding:9px 10px;border-bottom:1px solid var(--border);}
+  tr:hover td{background:var(--panel);}
+  .status{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+  .status.out{background:rgba(198,139,70,0.18);color:var(--accent);}
+  .status.late{background:rgba(181,83,60,0.18);color:var(--danger);}
+  .status.returned{background:rgba(122,148,113,0.18);color:var(--ok);}
+
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(0,0,0,0.55);
+    display:flex;align-items:center;justify-content:center;z-index:10;padding:16px;
+  }
+  .modal{
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:22px;width:100%;max-width:380px;
+  }
+  .modal h3{margin:0 0 16px;font-family:'Space Grotesk';font-size:17px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:5px;}
+  .field input,.field select{width:100%;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const CATEGORIES = ["Mobiliario","Sonido / Audio","Iluminación","Otros"];
+let items = [];
+let movements = [];
+let tab = 'inventario';
+let modal = null; // {type:'add-item'|'loan'|'return', itemId}
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+async function loadData(){
+  try{
+    const r = await window.storage.get('items', true);
+    items = r ? JSON.parse(r.value) : [];
+  }catch(e){ items = []; }
+  try{
+    const r = await window.storage.get('movements', true);
+    movements = r ? JSON.parse(r.value) : [];
+  }catch(e){ movements = []; }
+  render();
+}
+async function saveItems(){
+  try{ await window.storage.set('items', JSON.stringify(items), true); }catch(e){ console.error(e); }
+}
+async function saveMovements(){
+  try{ await window.storage.set('movements', JSON.stringify(movements), true); }catch(e){ console.error(e); }
+}
+
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+}
+function isLate(m){
+  if(m.dateReturn) return false;
+  if(!m.expectedReturn) return false;
+  return new Date(m.expectedReturn) < new Date();
+}
+
+function render(){
+  const app = document.getElementById('app');
+  const totalItems = items.reduce((s,i)=>s+i.total,0);
+  const outCount = movements.filter(m=>!m.dateReturn).length;
+
+  app.innerHTML = `
+    <header>
+      <h1>Pañol <span>TIOMA</span></h1>
+      <div class="stats">
+        <div><b>${items.length}</b><small>ítems distintos</small></div>
+        <div><b>${totalItems}</b><small>unidades totales</small></div>
+        <div><b>${outCount}</b><small>préstamos activos</small></div>
+      </div>
+    </header>
+    <div class="tabs">
+      <button class="${tab==='inventario'?'active':''}" onclick="setTab('inventario')">Inventario</button>
+      <button class="${tab==='movimientos'?'active':''}" onclick="setTab('movimientos')">Movimientos</button>
+    </div>
+    ${tab==='inventario' ? renderInventario() : renderMovimientos()}
+    ${modal ? renderModal() : ''}
+  `;
+}
+
+function renderInventario(){
+  let html = `<div class="toolbar">
+    <button class="btn" onclick="openModal('add-item')">+ Agregar ítem</button>
+  </div>`;
+
+  if(items.length===0){
+    html += `<div class="empty">No hay ítems cargados todavía. Agregá el primero con "+ Agregar ítem".</div>`;
+    return html;
+  }
+
+  CATEGORIES.forEach(cat=>{
+    const catItems = items.filter(i=>i.category===cat);
+    if(catItems.length===0) return;
+    html += `<div class="category-group"><h2>${cat}</h2>`;
+    catItems.forEach(i=>{
+      const low = i.available <= 0;
+      html += `
+        <div class="item-card">
+          <div>
+            <div class="name">${i.name}</div>
+            <div class="meta">${i.notes || ''}</div>
+          </div>
+          <div class="qty ${low?'low':''}">${i.available} / ${i.total}<small>disponible</small></div>
+          <div class="item-actions">
+            <button onclick="openModal('loan','${i.id}')" ${i.available<=0?'disabled':''}>Registrar salida</button>
+            <button onclick="deleteItem('${i.id}')" style="color:var(--danger)">Eliminar</button>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  return html;
+}
+
+function renderMovimientos(){
+  const sorted = [...movements].sort((a,b)=> new Date(b.dateOut) - new Date(a.dateOut));
+  if(sorted.length===0){
+    return `<div class="empty">Todavía no hay movimientos registrados.</div>`;
+  }
+  let rows = sorted.map(m=>{
+    let statusHtml;
+    if(m.dateReturn) statusHtml = `<span class="status returned">Devuelto</span>`;
+    else if(isLate(m)) statusHtml = `<span class="status late">Atrasado</span>`;
+    else statusHtml = `<span class="status out">Prestado</span>`;
+
+    return `<tr>
+      <td>${m.itemName}</td>
+      <td>${m.quantity}</td>
+      <td>${m.person}</td>
+      <td>${fmtDate(m.dateOut)}</td>
+      <td>${m.expectedReturn ? fmtDate(m.expectedReturn) : '—'}</td>
+      <td>${statusHtml}</td>
+      <td>${m.dateReturn ? '' : `<button class="btn secondary" style="padding:5px 10px;font-size:12px" onclick="returnMovement('${m.id}')">Marcar devuelto</button>`}</td>
+    </tr>`;
+  }).join('');
+
+  return `<table>
+    <tr><th>Ítem</th><th>Cant.</th><th>Retira</th><th>Salida</th><th>Devolución estimada</th><th>Estado</th><th></th></tr>
+    ${rows}
+  </table>`;
+}
+
+function renderModal(){
+  if(modal.type==='add-item'){
+    return `<div class="modal-bg" onclick="closeModalBg(event)">
+      <div class="modal">
+        <h3>Agregar ítem</h3>
+        <div class="field"><label>Nombre</label><input id="f-name" placeholder="Ej: Mesa plegable"></div>
+        <div class="field"><label>Categoría</label>
+          <select id="f-cat">${CATEGORIES.map(c=>`<option>${c}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>Cantidad total</label><input id="f-total" type="number" min="1" value="1"></div>
+        <div class="field"><label>Notas (opcional)</label><input id="f-notes" placeholder="Ej: guardar apiladas"></div>
+        <div class="modal-actions">
+          <button class="btn secondary" onclick="closeModal()">Cancelar</button>
+          <button class="btn" onclick="submitAddItem()">Guardar</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  if(modal.type==='loan'){
+    const item = items.find(i=>i.id===modal.itemId);
+    return `<div class="modal-bg" onclick="closeModalBg(event)">
+      <div class="modal">
+        <h3>Registrar salida — ${item.name}</h3>
+        <div class="field"><label>¿Quién retira?</label><input id="f-person" placeholder="Nombre"></div>
+        <div class="field"><label>Cantidad (disponible: ${item.available})</label>
+          <input id="f-qty" type="number" min="1" max="${item.available}" value="1"></div>
+        <div class="field"><label>Fecha y hora de devolución estimada</label>
+          <input id="f-return" type="datetime-local"></div>
+        <div class="modal-actions">
+          <button class="btn secondary" onclick="closeModal()">Cancelar</button>
+          <button class="btn" onclick="submitLoan()">Registrar</button>
+        </div>
+      </div>
+    </div>`;
+  }
+}
+
+function setTab(t){ tab=t; modal=null; render(); }
+function openModal(type,itemId){ modal={type,itemId}; render(); }
+function closeModal(){ modal=null; render(); }
+function closeModalBg(e){ if(e.target.classList.contains('modal-bg')) closeModal(); }
+
+async function submitAddItem(){
+  const name = document.getElementById('f-name').value.trim();
+  const category = document.getElementById('f-cat').value;
+  const total = parseInt(document.getElementById('f-total').value) || 1;
+  const notes = document.getElementById('f-notes').value.trim();
+  if(!name) return;
+  items.push({id:uid(),name,category,total,available:total,notes});
+  await saveItems();
+  closeModal();
+}
+
+async function deleteItem(id){
+  items = items.filter(i=>i.id!==id);
+  await saveItems();
+  render();
+}
+
+async function submitLoan(){
+  const item = items.find(i=>i.id===modal.itemId);
+  const person = document.getElementById('f-person').value.trim();
+  const qty = parseInt(document.getElementById('f-qty').value) || 1;
+  const expectedReturn = document.getElementById('f-return').value;
+  if(!person || qty<1 || qty>item.available) return;
+
+  item.available -= qty;
+  movements.push({
+    id:uid(), itemId:item.id, itemName:item.name, quantity:qty,
+    person, dateOut:new Date().toISOString(),
+    expectedReturn: expectedReturn ? new Date(expectedReturn).toISOString() : null,
+    dateReturn:null
+  });
+  await saveItems();
+  await saveMovements();
+  closeModal();
+}
+
+async function returnMovement(id){
+  const m = movements.find(x=>x.id===id);
+  m.dateReturn = new Date().toISOString();
+  const item = items.find(i=>i.id===m.itemId);
+  if(item) item.available += m.quantity;
+  await saveItems();
+  await saveMovements();
+  render();
+}
+
+loadData();
+</script>
+</body>
+</html>
